@@ -1,4 +1,5 @@
 const { response } = require('express');
+const db = require('../database/models');
 
 const usuariosGet = (req, res = response) => {
   const { user = 'Undefined User', nombre = 'Undefined Name' } = req.query;
@@ -36,10 +37,13 @@ const usuariosDelete = (req, res = response) => {
   });
 };
 
+
+
 module.exports = {
   usuariosGet,
   usuariosPut,
   usuariosPost,
   usuariosPatch,
   usuariosDelete,
+  
 };
