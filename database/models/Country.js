@@ -13,6 +13,11 @@ module.exports = (sequelize, dataTypes) => {
       type: dataTypes.STRING,
       unique: true,
     },
+    uuid: {
+      type: dataTypes.STRING,
+      unique: true,
+      allowNull: false,
+    },
   };
 
   const config = {

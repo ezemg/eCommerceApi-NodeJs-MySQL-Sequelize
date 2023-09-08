@@ -3,7 +3,7 @@ module.exports = (sequelize, dataTypes) => {
 
   const cols = {
     id: {
-      type: dataTypes.INTEGER,
+      type: dataTypes.INTEGER(11),
       primaryKey: true,
       allowNull: false,
       autoIncrement: true,
@@ -23,6 +23,11 @@ module.exports = (sequelize, dataTypes) => {
     country_id: {
       type: dataTypes.INTEGER,
     },
+    uuid: {
+      type: dataTypes.STRING,
+      unique: true,
+      allowNull: false,
+    },
   };
 
   const config = {
@@ -35,7 +40,7 @@ module.exports = (sequelize, dataTypes) => {
   const Address = sequelize.define(alias, cols, config);
 
   Address.associate = (models) => {
-    Address.belongsTo(models.Address, {
+    Address.belongsTo(models.Country, {
       as: 'country',
       foreignKey: 'country_id',
     });
