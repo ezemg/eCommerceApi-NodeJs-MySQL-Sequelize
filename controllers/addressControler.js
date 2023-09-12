@@ -1,8 +1,11 @@
 const { response } = require('express');
 const db = require('../database/models');
-const { Sequelize, Address, Country } = db;
 const { v4: uuidv4 } = require('uuid');
+const { Op } = require('sequelize');
 
+const { Sequelize, Address, Country } = db;
+
+// Address CRUD
 const addressGet = async (req, res = response) => {
   try {
     const address = await Address.findAll({
@@ -61,22 +64,63 @@ const addressPost = async (req, res = response) => {
     const uuid = uuidv4();
 
     // Creo la instancia de objeto
-    let address = await Address.build({ ...body, uuid });
+    const address = await Address.build({ ...body, uuid });
 
     // Guardado fisico en DB
-    address = await address.save();
-    res.json(address.toJSON());
+    await address.save();
+
+    res.status(200).json({
+      msg: 'Todo salio bien',
+      status: 'ok',
+    });
   } catch (error) {
     console.log(error);
   }
 };
 
+const addressPut = async (req, res = response) => {
+  const { body } = req;
+  try {
+    await Address.update(body, { where: { uuid: req.params.uuid } });
+
+    res.status(200).json({
+      msg: 'Entry edited',
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const addressDelete = async (req, res = response) => {
+  try {
+    await Address.update(
+      { is_active: 1 },
+      { where: { uuid: req.params.uuid } }
+    );
+
+    res.status(200).json({ msg: 'Eliminado' });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// Country CRUD
 const countryGet = async (req, res = response) => {
   try {
-    const countries = await Country.findAll({
+    const { name } = req.query;
+
+    const opts = {
+      where: {},
       attributes: ['country_name', 'uuid'],
       order: [['id', 'ASC']],
-    });
+    };
+
+    if (name !== undefined && name !== '')
+      opts.where.country_name = {
+        [Op.like]: `%${name}%`,
+      };
+
+    const countries = await Country.findAll(opts);
 
     res.status(200).json(countries);
   } catch (error) {
@@ -118,11 +162,41 @@ const countryPost = async (req, res = response) => {
   }
 };
 
+const countryPut = async (req, res = response) => {
+  const { body } = req;
+  try {
+    await Country.update(body, { where: { uuid: req.params.uuid } });
+
+    res.status(200).json({
+      msg: 'Entry edited',
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const countryDelete = async (req, res = response) => {
+  try {
+    await Country.update(
+      { is_active: 1 },
+      { where: { uuid: req.params.uuid } }
+    );
+
+    res.status(200).json({ msg: 'Eliminado' });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 module.exports = {
+  addressDelete,
   addressGet,
   addressGetByUuid,
   addressPost,
+  addressPut,
+  countryDelete,
   countryGet,
   countryGetByUuid,
   countryPost,
+  countryPut,
 };

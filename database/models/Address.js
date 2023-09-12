@@ -28,10 +28,16 @@ module.exports = (sequelize, dataTypes) => {
       unique: true,
       allowNull: false,
     },
+    is_active: {
+      type: dataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 0,
+    },
   };
 
   const config = {
     tableName: 'address',
+    paranoid: true,
     timestamps: 'true',
     createdAt: 'inserted_at',
     updatedAt: 'updated_at',

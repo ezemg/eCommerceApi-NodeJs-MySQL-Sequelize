@@ -18,6 +18,11 @@ module.exports = (sequelize, dataTypes) => {
       unique: true,
       allowNull: false,
     },
+    is_active: {
+      type: dataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 0,
+    },
   };
 
   const config = {
