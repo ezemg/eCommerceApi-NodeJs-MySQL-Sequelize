@@ -1,13 +1,35 @@
 const { response } = require('express');
 const db = require('../database/models');
 
-const usuariosGet = (req, res = response) => {
-  const { user = 'Undefined User', nombre = 'Undefined Name' } = req.query;
-  res.json({
-    msg: 'get API - controlador',
-    user,
-    nombre,
-  });
+const { Sequelize, User, Roles } = db;
+
+const usuariosGet = async (req, res = response) => {
+  try {
+    const user = await db.User.findAll({
+      attributes: [
+        'uuid',
+        'email_address',
+        'phone_number',
+        'is_active',
+        [Sequelize.literal('roles.name'), 'role_name'],
+      ],
+      include: {
+        model: db.Roles,
+        as: 'roles',
+        attributes: [],
+      },
+    });
+
+    res.json(user);
+  } catch (error) {
+    console.log(error);
+  }
+  // const { user = 'Undefined User', nombre = 'Undefined Name' } = req.query;
+  // res.json({
+  //   msg: 'get API - controlador',
+  //   user,
+  //   nombre,
+  // });
 };
 
 const usuariosPut = (req, res = response) => {
@@ -37,13 +59,10 @@ const usuariosDelete = (req, res = response) => {
   });
 };
 
-
-
 module.exports = {
   usuariosGet,
   usuariosPut,
   usuariosPost,
   usuariosPatch,
   usuariosDelete,
-  
 };

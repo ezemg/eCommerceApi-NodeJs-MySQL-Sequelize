@@ -37,7 +37,6 @@ module.exports = (sequelize, dataTypes) => {
 
   const config = {
     tableName: 'address',
-    paranoid: true,
     timestamps: 'true',
     createdAt: 'inserted_at',
     updatedAt: 'updated_at',

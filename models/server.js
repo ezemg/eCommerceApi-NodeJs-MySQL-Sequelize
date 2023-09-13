@@ -6,8 +6,9 @@ class Server {
   constructor() {
     this.app = express();
     this.port = process.env.PORT;
-    this.usuariosPath = '/api/usuarios';
+    this.usuariosPath = '/api/users';
     this.addressPath = '/api/address';
+    this.rolesPath = '/api/roles';
 
     // DB connection
     this.dbConnection();
@@ -45,6 +46,8 @@ class Server {
     this.app.use(this.usuariosPath, require('../routes/usuariosRoutes.js'));
 
     this.app.use(this.addressPath, require('../routes/addressRoutes.js'));
+
+    this.app.use(this.rolesPath, require('../routes/rolesRoutes.js'));
   }
 
   listen() {
