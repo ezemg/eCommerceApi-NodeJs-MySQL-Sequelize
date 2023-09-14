@@ -5,18 +5,21 @@ const {
   usuariosPost,
   usuariosDelete,
   usuariosPatch,
+  usuariosGetByUuid,
 } = require('../controllers/usuariosController.js');
 
 const router = Router();
 
 router.get('/', usuariosGet);
 
-router.put('/:id', usuariosPut);
+router.get('/:uuid', usuariosGetByUuid);
+
+router.put('/:uuid', usuariosPut);
 
 router.post('/', usuariosPost);
 
-router.patch('/', usuariosPatch);
+router.patch('/:uuid', usuariosPatch);
 
-router.delete('/', usuariosDelete);
+router.delete('/:uuid', usuariosDelete);
 
 module.exports = router;

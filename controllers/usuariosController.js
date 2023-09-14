@@ -32,6 +32,38 @@ const usuariosGet = async (req, res = response) => {
   // });
 };
 
+const usuariosGetByUuid = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      where: { uuid: req.params.uuid },
+      attributes: [
+        'uuid',
+        'email_address',
+        'phone_number',
+        'is_active',
+        [Sequelize.literal('roles.name'), 'role_name'],
+        [Sequelize.literal('shop_order.invoice_number'), 'invoiceNum'],
+      ],
+      include: [
+        {
+          model: db.Roles,
+          as: 'roles',
+          attributes: [],
+        },
+        {
+          model: db.ShopOrder,
+          as: 'shop_order',
+          // attributes: [],
+        },
+      ],
+    });
+    res.status(200).json(user);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ msg: 'Contacte al Admin' });
+  }
+};
+
 const usuariosPut = (req, res = response) => {
   const id = req.params.id;
 
@@ -65,4 +97,5 @@ module.exports = {
   usuariosPost,
   usuariosPatch,
   usuariosDelete,
+  usuariosGetByUuid,
 };

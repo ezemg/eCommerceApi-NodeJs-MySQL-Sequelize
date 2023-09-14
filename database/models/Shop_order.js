@@ -1,6 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-
-    const alias = 'ShopOrder'
+  const alias = 'ShopOrder';
   const cols = {
     uuid: {
       type: DataTypes.STRING,
@@ -33,6 +32,13 @@ module.exports = (sequelize, DataTypes) => {
   };
 
   const ShopOrder = sequelize.define(alias, cols, config);
+
+  ShopOrder.associate = (models) => {
+    ShopOrder.belongsTo(models.User, {
+      foreignKey: 'user_id',
+      as: 'user',
+    });
+  };
 
   // Define las asociaciones según tu estructura de datos
 

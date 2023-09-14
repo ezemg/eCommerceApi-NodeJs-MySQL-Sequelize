@@ -42,15 +42,39 @@ module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define(alias, cols, config);
 
   User.associate = (models) => {
-    User.hasMany(models.UserAddress, {
-      as: 'addresses',
+    User.belongsToMany(models.Address, {
+      as: 'address',
+      through: models.UserAddress,
       foreignKey: 'user_id',
     });
 
-    User.hasMany(models.UserReview, {
-      as: 'reviews',
+    // User.belongsToMany(models.OrderLine, {
+    //   as: 'reviews',
+    //   through: models.UserReview,
+    //   foreignKey: 'user_id',
+    // });
+
+    User.hasMany(models.ShopOrder, {
+      as: 'shop_order',
       foreignKey: 'user_id',
     });
+
+    // User.belongsToMany(models.OrderStatus, {
+    //   as: 'order_status',
+    //   through: models.ShopOrder,
+    //   foreignKey: 'user_id',
+    // });
+
+    // User.belongsToMany(models.PaymentMethod, {
+    //   as: 'payment_method',
+    //   through: models.ShopOrder,
+    //   foreignKey: 'user_id',
+    // });
+    // User.belongsToMany(models.ShippingMethod, {
+    //   as: 'shipping_method',
+    //   through: models.ShopOrder,
+    //   foreignKey: 'user_id',
+    // });
 
     User.belongsToMany(models.Roles, {
       as: 'roles',
