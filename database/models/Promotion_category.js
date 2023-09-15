@@ -4,10 +4,18 @@ module.exports = (sequelize, DataTypes) => {
     product_category_id: {
       type: DataTypes.INTEGER(11),
       allowNull: false,
+      references: {
+        model: sequelize.models.ProductCategory,
+        key: 'id',
+      },
     },
     promotion_id: {
       type: DataTypes.INTEGER(11),
       allowNull: false,
+      references: {
+        model: sequelize.models.Promotion,
+        key: 'id',
+      },
     },
     uuid: {
       type: DataTypes.STRING,
@@ -30,20 +38,6 @@ module.exports = (sequelize, DataTypes) => {
   };
 
   const PromotionCategory = sequelize.define(alias, cols, config);
-
-  PromotionCategory.associate = (models) => {
-    // Asociación con Promotion basada en el script original
-    PromotionCategory.belongsTo(models.Promotion, {
-      as: 'promotion',
-      foreignKey: 'promotion_id',
-    });
-
-    // Asociación con ProductCategory basada en el script original
-    PromotionCategory.belongsTo(models.ProductCategory, {
-      as: 'product_category',
-      foreignKey: 'product_category_id',
-    });
-  };
 
   return PromotionCategory;
 };

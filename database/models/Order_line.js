@@ -14,10 +14,18 @@ module.exports = (sequelize, DataTypes) => {
     product_item_id: {
       type: DataTypes.INTEGER(11),
       allowNull: false,
+      references: {
+        model: sequelize.models.ProductItem,
+        key: 'id',
+      },
     },
     shop_order_id: {
       type: DataTypes.INTEGER(11),
       allowNull: false,
+      references: {
+        model: sequelize.models.ShopOrder,
+        key: 'id',
+      },
     },
     qty: {
       type: DataTypes.INTEGER(11),
@@ -45,18 +53,14 @@ module.exports = (sequelize, DataTypes) => {
   const OrderLine = sequelize.define(alias, cols, config);
 
   OrderLine.associate = (models) => {
-    OrderLine.belongsTo(models.ProductItem, {
-      as: 'product_item',
-      foreignKey: 'product_item_id',
-    });
-
-    OrderLine.belongsTo(models.ShopOrder, {
-      as: 'shop_order',
-      foreignKey: 'shop_order_id',
-    });
-
-    OrderLine.hasOne(models.UserReview, {
+    OrderLine.hasMany(models.UserReview, {
       as: 'user_review',
+      foreignKey: 'order_line_id',
+    });
+
+    OrderLine.belongsToMany(models.User, {
+      as: 'user',
+      through: models.UserReview,
       foreignKey: 'order_line_id',
     });
   };

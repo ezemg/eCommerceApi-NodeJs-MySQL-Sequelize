@@ -1,6 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-
-    const alias = 'Promotion'
+  const alias = 'Promotion';
   const cols = {
     uuid: {
       type: DataTypes.STRING,
@@ -45,11 +44,10 @@ module.exports = (sequelize, DataTypes) => {
   const Promotion = sequelize.define(alias, cols, config);
 
   Promotion.associate = (models) => {
-    // Asociación con PromotionCategory basada en el script original
     Promotion.belongsToMany(models.ProductCategory, {
+      as: 'product_category',
       through: models.PromotionCategory,
       foreignKey: 'promotion_id',
-      as: 'product_categories',
     });
   };
 

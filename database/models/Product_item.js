@@ -44,21 +44,20 @@ module.exports = (sequelize, DataTypes) => {
   const ProductItem = sequelize.define(alias, cols, config);
 
   ProductItem.associate = (models) => {
-    // Asociación con Product basada en el script original
+    ProductItem.belongsToMany(models.VariationOption, {
+      as: 'variation_option',
+      through: models.ProductConfiguration,
+      foreignKey: 'product_item_id',
+    });
+
     ProductItem.belongsTo(models.Product, {
       as: 'product',
       foreignKey: 'product_id',
     });
 
-    // Asociación con OrderLine basada en el script original
-    ProductItem.hasMany(models.OrderLine, {
-      as: 'order_lines',
-      foreignKey: 'product_item_id',
-    });
-
-    // Asociación con ProductConfiguration basada en el script original
-    ProductItem.hasMany(models.ProductConfiguration, {
-      as: 'product_configurations',
+    ProductItem.belongsToMany(models.ShopOrder, {
+      as: 'shop_order',
+      through: models.OrderLine,
       foreignKey: 'product_item_id',
     });
   };

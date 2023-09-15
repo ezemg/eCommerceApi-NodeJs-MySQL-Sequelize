@@ -1,6 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-
-    const alias = 'ProductCategory'
+  const alias = 'ProductCategory';
   const cols = {
     id: {
       type: DataTypes.INTEGER(11),
@@ -20,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(255),
       allowNull: false,
     },
-   
+
     is_active: {
       type: DataTypes.TINYINT(4),
       allowNull: false,
@@ -32,20 +31,30 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'product_category',
     timestamps: 'true',
     createdAt: 'inserted_at',
-    updatedAt: 'updated_at',  };
+    updatedAt: 'updated_at',
+  };
 
   const ProductCategory = sequelize.define(alias, cols, config);
 
   ProductCategory.associate = (models) => {
-    // Asociación con sí misma para categorías secundarias
     ProductCategory.hasMany(models.ProductCategory, {
-      as: 'sub_categories',
+      as: 'product_category',
       foreignKey: 'parent_category_id',
     });
 
-    // Asociación con Product basada en el script original
+    ProductCategory.belongsToMany(models.Promotion, {
+      as: 'promotion',
+      through: models.PromotionCategory,
+      foreignKey: 'product_category_id',
+    });
+
     ProductCategory.hasMany(models.Product, {
-      as: 'products',
+      as: 'product',
+      foreignKey: 'product_category_id',
+    });
+
+    ProductCategory.hasMany(models.Variation, {
+      as: 'variation',
       foreignKey: 'product_category_id',
     });
   };

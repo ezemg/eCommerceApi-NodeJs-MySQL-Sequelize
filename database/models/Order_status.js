@@ -33,9 +33,8 @@ module.exports = (sequelize, DataTypes) => {
   const OrderStatus = sequelize.define(alias, cols, config);
 
   OrderStatus.associate = (models) => {
-    // Ejemplo de asociación (puedes personalizarlo según tus necesidades)
     OrderStatus.hasMany(models.ShopOrder, {
-      as: 'shop_orders',
+      as: 'shop_order',
       foreignKey: 'order_status_id',
     });
   };

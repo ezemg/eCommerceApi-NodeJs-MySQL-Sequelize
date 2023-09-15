@@ -49,6 +49,17 @@ module.exports = (sequelize, dataTypes) => {
       as: 'country',
       foreignKey: 'country_id',
     });
+
+    Address.belongsToMany(models.User, {
+      as: 'users',
+      through: models.UserAddress,
+      foreignKey: 'address_id',
+    });
+
+    Address.hasMany(models.ShopOrder, {
+      as: 'shop_order',
+      foreignKey: 'shipping_address',
+    });
   };
 
   return Address;

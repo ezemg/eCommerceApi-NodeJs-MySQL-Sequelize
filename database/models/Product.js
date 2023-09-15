@@ -1,6 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-
-    const alias = 'Product'
+  const alias = 'Product';
   const cols = {
     uuid: {
       type: DataTypes.STRING,
@@ -41,15 +40,13 @@ module.exports = (sequelize, DataTypes) => {
   const Product = sequelize.define(alias, cols, config);
 
   Product.associate = (models) => {
-    // Asociación con ProductCategory basada en el script original
     Product.belongsTo(models.ProductCategory, {
       as: 'product_category',
       foreignKey: 'product_category_id',
     });
 
-    // Asociación con ProductItem basada en el script original
     Product.hasMany(models.ProductItem, {
-      as: 'product_items',
+      as: 'product_item',
       foreignKey: 'product_id',
     });
   };

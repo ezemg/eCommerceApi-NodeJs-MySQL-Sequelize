@@ -31,7 +31,18 @@ module.exports = (sequelize, DataTypes) => {
 
   const ShippingMethod = sequelize.define(alias, cols, config);
 
-  // Define las asociaciones según tu estructura de datos
+  ShippingMethod.associate = (models) => {
+    ShippingMethod.hasMany(models.ShopOrder, {
+      foreignKey: 'shipping_method',
+      as: 'shop_order',
+    });
+
+    ShippingMethod.belongsToMany(models.User, {
+      through: models.ShopOrder,
+      foreignKey: 'shipping_method_id',
+      as: 'user',
+    });
+  };
 
   return ShippingMethod;
 };

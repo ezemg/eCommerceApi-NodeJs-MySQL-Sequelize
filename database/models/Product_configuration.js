@@ -1,14 +1,21 @@
 module.exports = (sequelize, DataTypes) => {
-
-    const alias = 'ProductConfiguration'
+  const alias = 'ProductConfiguration';
   const cols = {
     product_item_id: {
       type: DataTypes.INTEGER(11),
       allowNull: false,
+      references: {
+        model: sequelize.models.ProductItem,
+        key: 'id',
+      },
     },
     variation_option_id: {
       type: DataTypes.INTEGER(11),
       allowNull: false,
+      references: {
+        model: sequelize.models.VariationOption,
+        key: 'id',
+      },
     },
     uuid: {
       type: DataTypes.STRING,
@@ -30,25 +37,7 @@ module.exports = (sequelize, DataTypes) => {
     updatedAt: 'updated_at',
   };
 
-  const ProductConfiguration = sequelize.define(
-    alias,
-    cols,
-    config
-  );
-
-  ProductConfiguration.associate = (models) => {
-    // Asociación con ProductItem basada en el script original
-    ProductConfiguration.belongsTo(models.ProductItem, {
-      as: 'product_item',
-      foreignKey: 'product_item_id',
-    });
-
-    // Asociación con VariationOption basada en el script original
-    ProductConfiguration.belongsTo(models.VariationOption, {
-      as: 'variation_option',
-      foreignKey: 'variation_option_id',
-    });
-  };
+  const ProductConfiguration = sequelize.define(alias, cols, config);
 
   return ProductConfiguration;
 };

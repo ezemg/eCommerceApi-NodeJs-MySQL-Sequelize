@@ -33,10 +33,15 @@ module.exports = (sequelize, DataTypes) => {
   const PaymentMethod = sequelize.define(alias, cols, config);
 
   PaymentMethod.associate = (models) => {
-    // Asociación con ShopOrder basada en el script original
     PaymentMethod.hasMany(models.ShopOrder, {
-      as: 'shop_orders',
+      as: 'shop_order',
       foreignKey: 'payment_method_id',
+    });
+
+    PaymentMethod.belongsToMany(models.User, {
+      through: models.ShopOrder,
+      as: 'user',
+      foreignKey: 'user_id',
     });
   };
 

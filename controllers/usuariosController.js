@@ -42,13 +42,12 @@ const usuariosGetByUuid = async (req, res) => {
         'phone_number',
         'is_active',
         [Sequelize.literal('roles.name'), 'role_name'],
-        [Sequelize.literal('shop_order.invoice_number'), 'invoiceNum'],
       ],
       include: [
         {
           model: db.Roles,
           as: 'roles',
-          attributes: [],
+          // attributes: [],
         },
         {
           model: db.ShopOrder,

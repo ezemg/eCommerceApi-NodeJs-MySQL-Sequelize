@@ -28,5 +28,17 @@ module.exports = (sequelize, DataTypes) => {
 
   // Define las asociaciones según tu estructura de datos
 
+  VariationOption.associate = (models) => {
+    VariationOption.belongsToMany(models.VariationOption, {
+      through: models.ProductConfiguration,
+      foreignKey: 'variation_option_id',
+      as: 'product_configuration',
+    });
+    VariationOption.belongsTo(models.Variation, {
+      foreignKey: 'variation_id',
+      as: 'variation',
+    });
+  };
+
   return VariationOption;
 };

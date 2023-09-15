@@ -38,7 +38,5 @@ module.exports = (sequelize, DataTypes) => {
 
   const UserRoles = sequelize.define(alias, cols, config);
 
-  // Define las asociaciones según tu estructura de datos
-
   return UserRoles;
 };
