@@ -36,11 +36,11 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
 
-    is_active: {
-      type: DataTypes.TINYINT(4),
-      allowNull: false,
-      defaultValue: 0,
-    },
+    // is_active: {
+    //   type: DataTypes.TINYINT(4),
+    //   allowNull: false,
+    //   defaultValue: 0,
+    // },
   };
 
   const config = {

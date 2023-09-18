@@ -1,8 +1,13 @@
 module.exports = (sequelize, DataTypes) => {
   const alias = 'ProductItem';
   const cols = {
-    product_id: {
+    id: {
+      primaryKey: true,
       type: DataTypes.INTEGER(11),
+      allowNull: false,
+    },
+    product_id: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
     uuid: {
@@ -45,8 +50,8 @@ module.exports = (sequelize, DataTypes) => {
 
   ProductItem.associate = (models) => {
     ProductItem.belongsToMany(models.VariationOption, {
-      as: 'variation_option',
       through: models.ProductConfiguration,
+      as: 'variation_option',
       foreignKey: 'product_item_id',
     });
 

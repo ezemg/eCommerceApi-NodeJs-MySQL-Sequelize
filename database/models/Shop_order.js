@@ -82,7 +82,7 @@ module.exports = (sequelize, DataTypes) => {
 
   ShopOrder.associate = (models) => {
     ShopOrder.belongsTo(models.Address, {
-      foreignKey: 'shipping_address',
+      foreignKey: 'shipping_address_id',
       as: 'address',
     });
 
@@ -113,7 +113,6 @@ module.exports = (sequelize, DataTypes) => {
       as: 'user',
     });
   };
-
 
   return ShopOrder;
 };

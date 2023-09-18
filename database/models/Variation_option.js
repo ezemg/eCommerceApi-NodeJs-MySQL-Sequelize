@@ -1,6 +1,19 @@
 module.exports = (sequelize, DataTypes) => {
   const alias = 'VariationOption';
   const cols = {
+    id: {
+      primaryKey: true,
+      type: DataTypes.INTEGER(11),
+      allowNull: false,
+    },
+    variation_id: {
+      type: DataTypes.INTEGER(11),
+      allowNull: false,
+      references: {
+        model: sequelize.models.Variation,
+        key: 'id',
+      },
+    },
     uuid: {
       type: DataTypes.STRING,
       unique: true,
@@ -29,10 +42,10 @@ module.exports = (sequelize, DataTypes) => {
   // Define las asociaciones según tu estructura de datos
 
   VariationOption.associate = (models) => {
-    VariationOption.belongsToMany(models.VariationOption, {
+    VariationOption.belongsToMany(models.ProductItem, {
       through: models.ProductConfiguration,
-      foreignKey: 'variation_option_id',
       as: 'product_configuration',
+      foreignKey: 'variation_option_id',
     });
     VariationOption.belongsTo(models.Variation, {
       foreignKey: 'variation_id',

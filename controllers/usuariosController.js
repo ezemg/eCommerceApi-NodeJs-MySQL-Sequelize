@@ -1,7 +1,7 @@
 const { response } = require('express');
 const db = require('../database/models');
 
-const { Sequelize, User, Roles } = db;
+const { Sequelize, User, Roles, Product, ProductItem } = db;
 
 const usuariosGet = async (req, res = response) => {
   try {
@@ -34,28 +34,59 @@ const usuariosGet = async (req, res = response) => {
 
 const usuariosGetByUuid = async (req, res) => {
   try {
-    const user = await User.findOne({
+    // const user = await User.findOne({
+    //   where: { uuid: req.params.uuid },
+    //   attributes: [
+    //     'uuid',
+    //     'email_address',
+    //     'phone_number',
+    //     'is_active',
+    //     [Sequelize.literal('roles.name'), 'role_name'],
+    //   ],
+    //   include: [
+    //     {
+    //       model: db.Roles,
+    //       as: 'roles',
+    //       attributes: [],
+    //     },
+    //   ],
+    // });
+
+    const user = await ProductItem.findOne({
       where: { uuid: req.params.uuid },
+      // attributes: [
+      //   'uuid',
+      //   'email_address',
+      //   'phone_number',
+      //   'is_active',
+      //   [Sequelize.literal('roles.name'), 'role_name'],
+      // ],
       attributes: [
         'uuid',
-        'email_address',
-        'phone_number',
+        'SKU',
+        'qty_in_stock',
         'is_active',
-        [Sequelize.literal('roles.name'), 'role_name'],
+        [Sequelize.literal('product.name'), 'product_name'],
+        [Sequelize.literal('variation_option.value'), 'value'],
       ],
       include: [
         {
-          model: db.Roles,
-          as: 'roles',
+          model: db.Product,
+          as: 'product',
+
           // attributes: [],
         },
         {
-          model: db.ShopOrder,
-          as: 'shop_order',
+          model: db.VariationOption,
+          as: 'variation_option',
+          include: [{ model: db.Variation, as: 'variation' }],
+
           // attributes: [],
         },
       ],
     });
+
+    // console.log(user[0].variation_option.map(el => el.value));
     res.status(200).json(user);
   } catch (error) {
     console.log(error);

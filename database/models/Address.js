@@ -58,7 +58,7 @@ module.exports = (sequelize, dataTypes) => {
 
     Address.hasMany(models.ShopOrder, {
       as: 'shop_order',
-      foreignKey: 'shipping_address',
+      foreignKey: 'shipping_address_id',
     });
   };
 

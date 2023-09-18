@@ -33,7 +33,7 @@ module.exports = (sequelize, DataTypes) => {
 
   ShippingMethod.associate = (models) => {
     ShippingMethod.hasMany(models.ShopOrder, {
-      foreignKey: 'shipping_method',
+      foreignKey: 'shipping_method_id',
       as: 'shop_order',
     });
 
