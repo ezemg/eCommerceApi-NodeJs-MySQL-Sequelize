@@ -5,6 +5,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER(11),
       primaryKey: true,
       allowNull: false,
+      autoIncrement: true,
     },
     uuid: {
       type: DataTypes.STRING,
@@ -39,6 +40,11 @@ module.exports = (sequelize, DataTypes) => {
   ProductCategory.associate = (models) => {
     ProductCategory.hasMany(models.ProductCategory, {
       as: 'product_category',
+      foreignKey: 'parent_category_id',
+    });
+
+    ProductCategory.belongsTo(models.ProductCategory, {
+      as: 'product_category_parent',
       foreignKey: 'parent_category_id',
     });
 

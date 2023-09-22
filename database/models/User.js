@@ -88,6 +88,13 @@ module.exports = (sequelize, DataTypes) => {
     //   foreignKey: 'user_id',
     // });
   };
+  User.prototype.toJSON = function () {
+    let values = Object.assign({}, this.get());
+
+    delete values.password;
+    delete values.id;
+    return values;
+  };
 
   return User;
 };
