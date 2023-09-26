@@ -67,8 +67,6 @@ const variationsController = {
       res.json({ msg: 'variationsGet error from controller' });
     }
   },
-  // Find variations
-  variationsFind: async (req, res = response) => {},
   // Find one variation
   variationsGetByUuid: async (req, res = response) => {
     try {
@@ -256,18 +254,158 @@ const productItemsController = {
   // List all product items
   productItemsGet: async (req, res = response) => {
     try {
-      const productItems = await db.ProductItem.findAll();
-      res.json(productItems);
+      const productItems = await db.ProductItem.findAll({
+        attributes: [
+          'uuid',
+          [
+            db.Sequelize.col('product->product_category.category_name'),
+            'category',
+          ],
+          [db.Sequelize.literal('product.name'), 'product_name'],
+          [db.Sequelize.literal('product.description'), 'description'],
+          'SKU',
+          'qty_in_stock',
+          'product_image',
+          'price',
+          'is_active',
+        ],
+        include: [
+          {
+            model: db.VariationOption,
+            as: 'variation_option',
+            include: { model: db.Variation, as: 'variation' },
+          },
+          {
+            model: db.Product,
+            as: 'product',
+            attributes: [],
+            include: { model: db.ProductCategory, as: 'product_category' },
+          },
+        ],
+      });
+
+      console.log(productItems.map((obj) => obj.get({ plain: true })));
+
+      const result = productItems
+        .map((obj) => obj.get({ plain: true }))
+        .map((item) => ({
+          ...item,
+          variation_option: Object.fromEntries(
+            item.variation_option.map((option) => [
+              option.variation.name,
+              option.value,
+            ])
+          ),
+        }));
+
+      res.json(result);
     } catch (error) {
+      console.log(error);
       res.json({ msg: 'productItems error from controller' });
     }
   },
-  // Find product items
-  productItemsFind: async (req, res = response) => {},
+
   // Find one product item
-  productItemsFindOne: async (req, res = response) => {},
+  productItemsGetByUuid: async (req, res = response) => {
+    try {
+      const productItem = await db.ProductItem.findOne({
+        where: { uuid: req.params.uuid },
+        attributes: [
+          'uuid',
+          [
+            db.Sequelize.col('product->product_category.category_name'),
+            'category',
+          ],
+          [db.Sequelize.literal('product.name'), 'product_name'],
+          [db.Sequelize.literal('product.description'), 'description'],
+          'SKU',
+          'qty_in_stock',
+          'product_image',
+          'price',
+          'is_active',
+        ],
+        include: [
+          {
+            model: db.VariationOption,
+            as: 'variation_option',
+            include: { model: db.Variation, as: 'variation' },
+          },
+          {
+            model: db.Product,
+            as: 'product',
+            attributes: [],
+            include: { model: db.ProductCategory, as: 'product_category' },
+          },
+        ],
+      });
+
+      let result = { ...productItem.get({ plain: true }) };
+
+      result = {
+        ...result,
+        variation_option: Object.fromEntries(
+          result.variation_option.map((option) => [
+            option.variation.name,
+            option.value,
+          ])
+        ),
+      };
+
+      res.json(result);
+    } catch (error) {
+      console.log(error);
+      res.json({ msg: 'productItemsGetByUuid error from controller' });
+    }
+  },
   // Create product item
-  productItemsPost: async (req, res = response) => {},
+  productItemsPost: async (req, res = response) => {
+    const {
+      product_id,
+      SKU,
+      qty_in_stock,
+      product_image,
+      price,
+      variation_option_ids: variationOptionsIds,
+    } = req.body;
+
+    try {
+      const result = await db.sequelize.transaction(async (t) => {
+        const productItem = await db.ProductItem.build(
+          {
+            product_id,
+            SKU,
+            qty_in_stock,
+            product_image,
+            price,
+            uuid: uuidv4(),
+          },
+          { transaction: t }
+        );
+
+        await productItem.save({ transaction: t });
+
+        for (const variation_option_id of variationOptionsIds) {
+          await db.ProductConfiguration.create(
+            {
+              product_item_id: productItem.id,
+              variation_option_id,
+              uuid: uuidv4(),
+            },
+            { transaction: t }
+          );
+        }
+
+        return productItem;
+      });
+      res.json({
+        result,
+        msg: 'ok, productItemsPost',
+      });
+    } catch (error) {
+      console.log(error);
+      res.json({ msg: 'productItemsPost error from controller' });
+    }
+  },
   // Delete product item
   productItemsDelete: async (req, res = response) => {},
   // Edit product item
