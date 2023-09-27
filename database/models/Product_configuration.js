@@ -39,5 +39,15 @@ module.exports = (sequelize, DataTypes) => {
 
   const ProductConfiguration = sequelize.define(alias, cols, config);
 
+  // ProductConfiguration.associate = (models) => {
+  //   ProductConfiguration.belongsTo(models.ProductItem, {
+  //     as: 'product_item',
+  //     foreignKey: 'id',
+  //   });
+  //   ProductConfiguration.belongsTo(models.VariationOption, {
+  //     as: 'variation_option',
+  //     foreignKey: 'id',
+  //   });
+  // };
   return ProductConfiguration;
 };

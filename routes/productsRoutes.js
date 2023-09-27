@@ -43,7 +43,7 @@ router.post('/product_item', JWTValidator, productItemsPost);
 router.put('/:uuid', JWTValidator);
 router.put('/variations/:uuid', JWTValidator, variationsPut);
 router.put('/variation_options/:uuid', JWTValidator, variationOptionsPut);
-router.put('/product_item', JWTValidator, productItemsPut);
+router.put('/product_item/:uuid', JWTValidator, productItemsPut);
 
 // Soft delete entry
 router.delete('/:uuid', JWTValidator);

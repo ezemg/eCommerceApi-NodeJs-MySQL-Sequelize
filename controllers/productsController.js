@@ -284,8 +284,6 @@ const productItemsController = {
         ],
       });
 
-      console.log(productItems.map((obj) => obj.get({ plain: true })));
-
       const result = productItems
         .map((obj) => obj.get({ plain: true }))
         .map((item) => ({
@@ -407,9 +405,82 @@ const productItemsController = {
     }
   },
   // Delete product item
-  productItemsDelete: async (req, res = response) => {},
+  productItemsDelete: async (req, res = response) => {
+    try {
+      const result = await db.sequelize.transaction(async (t) => {
+        const ProductItemToDelete = await db.ProductItem.findOne(
+          {
+            where: { uuid: req.params.uuid },
+          },
+          { transaction: t }
+        );
+
+        const { id } = ProductItemToDelete.toJSON();
+
+        await db.ProductConfiguration.destroy(
+          { where: { product_item_id: id } },
+          { transaction: t }
+        );
+
+        await ProductItemToDelete.update(
+          {
+            is_active: 1,
+          },
+          { transaction: t }
+        );
+
+        return ProductItemToDelete;
+      });
+      res.json({
+        msg: 'entry deleted successfully',
+      });
+    } catch (error) {
+      console.log(error);
+      res.json({ msg: 'productItemsDelete error from controller' });
+    }
+  },
   // Edit product item
-  productItemsPut: async (req, res = response) => {},
+  productItemsPut: async (req, res = response) => {
+    const { variation_option_ids: variationOptionsIds } = req.body;
+    const { body } = req;
+
+    const result = await db.sequelize.transaction(async (t) => {
+      const productItemToEdit = await db.ProductItem.update(
+        {
+          ...body,
+          isActive: 0,
+        },
+        { where: { uuid: req.params.uuid } },
+        { transaction: t }
+      );
+
+      const { id } = await db.ProductItem.findOne({
+        where: { uuid: req.params.uuid },
+      });
+      await db.ProductConfiguration.destroy(
+        { where: { product_item_id: id } },
+        { transaction: t }
+      );
+
+      if (variationOptionsIds.length > 0) {
+        for (const variation_option_id of variationOptionsIds) {
+          await db.ProductConfiguration.create(
+            {
+              product_item_id: id,
+              variation_option_id,
+              uuid: uuidv4(),
+            },
+            { transaction: t }
+          );
+        }
+      }
+
+      return productItemToEdit;
+    });
+    res.json({
+      msg: 'ok, productItemsPut',
+    });
+  },
 };
 
 module.exports = {

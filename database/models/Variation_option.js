@@ -48,6 +48,12 @@ module.exports = (sequelize, DataTypes) => {
       as: 'product_configuration',
       foreignKey: 'variation_option_id',
     });
+
+    // VariationOption.belongsTo(models.ProductConfiguration, {
+    //   as: 'variation_option',
+    //   foreignKey: 'variation_option_id',
+    // });
+
     VariationOption.belongsTo(models.Variation, {
       foreignKey: 'variation_id',
       as: 'variation',
