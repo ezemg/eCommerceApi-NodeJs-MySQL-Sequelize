@@ -7,23 +7,124 @@ const productsController = {
   // List all products
   productsGet: async (req, res = response) => {
     try {
-      const products = await db.Product.findAll();
+      const products = await db.Product.findAll({
+        attributes: [
+          'uuid',
+          'name',
+          'description',
+          'product_image',
+          'is_active',
+          [
+            db.Sequelize.literal('product_category.category_name'),
+            'category_name',
+          ],
+        ],
+        include: [
+          {
+            model: db.ProductCategory,
+            as: 'product_category',
+            attributes: [],
+          },
+          // {
+          //   model: db.ProductItem,
+          //   as: 'product_item',
+          // },
+        ],
+      });
 
       res.json(products);
     } catch (error) {
       res.json({ msg: 'productsGet error from controller' });
     }
   },
-  // Find products
-  productsFind: async (req, res = response) => {},
   // Find one product
-  productsFindOne: async (req, res = response) => {},
+  productsGetByUuid: async (req, res = response) => {
+    try {
+      const product = await db.Product.findOne({
+        where: { uuid: req.params.uuid },
+        attributes: [
+          'uuid',
+          'name',
+          'description',
+          'product_image',
+          'is_active',
+          [
+            db.Sequelize.literal('product_category.category_name'),
+            'category_name',
+          ],
+        ],
+        include: [
+          {
+            model: db.ProductCategory,
+            as: 'product_category',
+            attributes: [],
+          },
+          // {
+          //   model: db.ProductItem,
+          //   as: 'product_item',
+          // },
+        ],
+      });
+
+      res.json(product);
+    } catch (error) {
+      res.json({ msg: 'productsGet error from controller' });
+    }
+  },
   // Create product
-  productsPost: async (req, res = response) => {},
+  productsPost: async (req, res = response) => {
+    try {
+      const { product_category_id, name, description, product_image } =
+        req.body;
+
+      const product = await db.Product.create({
+        product_category_id,
+        name,
+        description,
+        product_image,
+        uuid: uuidv4(),
+      });
+
+      res.json({ msg: 'ok', product });
+    } catch (error) {
+      console.log(error);
+      res.json({ msg: 'variationsPost error from controller' });
+    }
+  },
   // Delete product
-  productsDelete: async (req, res = response) => {},
+  productsDelete: async (req, res = response) => {
+    try {
+      await db.Product.update(
+        { is_active: 1 },
+        { where: { uuid: req.params.uuid } }
+      );
+
+      res.json({ msg: 'ok, entry deleted' });
+    } catch (error) {
+      console.log(error);
+      res.json({ msg: 'variationsDelete error from controller' });
+    }
+  },
   // Edit product
-  productsPut: async (req, res = response) => {},
+  productsPut: async (req, res = response) => {
+    const { body } = req;
+    try {
+      const productEdit = await db.Product.update(
+        { ...body, is_active: 0 },
+        {
+          where: { uuid: req.params.uuid },
+        }
+      );
+
+      res.status(200).json({
+        msg: 'ok',
+        productEdit,
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(400).json({ msg: 'error from productsPut controller' });
+    }
+  },
 };
 
 const variationsController = {

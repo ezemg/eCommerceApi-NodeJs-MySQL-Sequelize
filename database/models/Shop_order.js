@@ -100,6 +100,12 @@ module.exports = (sequelize, DataTypes) => {
       as: 'product_item',
       through: models.OrderLine,
       foreignKey: 'shop_order_id',
+      otherKey: 'product_item_id',
+    });
+
+    ShopOrder.hasMany(models.OrderLine, {
+      as: 'order_line',
+      foreignKey: 'shop_order_id',
     });
 
     // OJO CON EL ALIAS ACÁ HUBO PROBLEMAS

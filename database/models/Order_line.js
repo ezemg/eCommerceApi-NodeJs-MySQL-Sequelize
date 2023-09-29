@@ -63,6 +63,16 @@ module.exports = (sequelize, DataTypes) => {
       through: models.UserReview,
       foreignKey: 'order_line_id',
     });
+
+    OrderLine.belongsTo(models.ShopOrder, {
+      as: 'shop_order',
+      foreignKey: 'shop_order_id',
+    });
+
+    OrderLine.belongsTo(models.ProductItem, {
+      as: 'product_item',
+      foreignKey: 'product_item_id',
+    });
   };
 
   return OrderLine;

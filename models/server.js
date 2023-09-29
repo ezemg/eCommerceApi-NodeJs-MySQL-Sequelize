@@ -12,9 +12,10 @@ class Server {
       auth: '/api/auth',
       categories: '/api/categories',
       products: '/api/products',
+      paymentMethods: '/api/payment_methods',
       roles: '/api/roles',
       search: '/api/search',
-      shopping: '/api/shopping',
+      shop_orders: '/api/shop_orders',
       uploads: '/api/uploads',
       users: '/api/users',
     };
@@ -65,8 +66,15 @@ class Server {
     );
     this.app.use(this.paths.products, require('../routes/productsRoutes.js'));
     this.app.use(this.paths.search, require('../routes/searchRoutes.js'));
-    this.app.use(this.paths.shopping, require('../routes/shoppingRoutes.js'));
+    this.app.use(
+      this.paths.shop_orders,
+      require('../routes/shopOrdersRoutes.js')
+    );
     this.app.use(this.paths.uploads, require('../routes/uploadsRoutes.js'));
+    this.app.use(
+      this.paths.paymentMethods,
+      require('../routes/paymentMethodRoutes.js')
+    );
   }
 
   listen() {

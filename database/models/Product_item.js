@@ -70,6 +70,12 @@ module.exports = (sequelize, DataTypes) => {
       as: 'shop_order',
       through: models.OrderLine,
       foreignKey: 'product_item_id',
+      otherKey: 'shop_order_id',
+    });
+
+    ProductItem.hasMany(models.OrderLine, {
+      as: 'order_line',
+      foreignKey: 'product_item_id',
     });
   };
 

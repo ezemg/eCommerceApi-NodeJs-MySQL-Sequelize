@@ -1,6 +1,12 @@
 module.exports = (sequelize, DataTypes) => {
   const alias = 'ShippingMethod';
   const cols = {
+    id: {
+      type: DataTypes.INTEGER(11),
+      primaryKey: true,
+      allowNull: false,
+      autoIncrement: true,
+    },
     uuid: {
       type: DataTypes.STRING,
       unique: true,
