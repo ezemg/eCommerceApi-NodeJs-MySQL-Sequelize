@@ -60,10 +60,12 @@ const categoriesGetByUuid = async (req, res = response) => {
 // Create category
 const categoriesPost = async (req, res = response) => {
   try {
+    // TODO ESTO DEBERIA SER UNA TRANSACCION!!!!!
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     const { parent_category_id, category_name } = req.body;
 
     const category = await db.ProductCategory.create({
-      parent_category_id,
+      parent_category_id: parent_category_id ? parent_category_id : null,
       category_name,
       uuid: uuidv4(),
     });

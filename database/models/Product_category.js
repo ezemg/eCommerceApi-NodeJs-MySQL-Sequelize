@@ -14,7 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     },
     parent_category_id: {
       type: DataTypes.INTEGER(11),
-      allowNull: false,
     },
     category_name: {
       type: DataTypes.STRING(255),
@@ -36,6 +35,12 @@ module.exports = (sequelize, DataTypes) => {
   };
 
   const ProductCategory = sequelize.define(alias, cols, config);
+
+  // ProductCategory.beforeCreate(async (category, options) => {
+  //   if (!category.parent_category_id) {
+  //     category.parent_category_id = category.id;
+  //   }
+  // });
 
   ProductCategory.associate = (models) => {
     ProductCategory.hasMany(models.ProductCategory, {

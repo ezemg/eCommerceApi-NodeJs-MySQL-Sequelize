@@ -30,7 +30,7 @@ const JWTValidator = async (req = request, res = response, next) => {
     //   });
     // }
 
-    req.user = user;
+    req.user = { uuid: user.uuid, email_address: user.email_address };
 
     next();
   } catch (error) {
