@@ -53,15 +53,11 @@ const login = async (req, res = response) => {
 
     // Generar JWT
     const token = await JWTGenerator(user.uuid);
-    // console.log(user.toJSON());
 
-    console.log(user.toJSON());
-    const { uuid, email_address, isActive } = user;
     res.json({
       user: user.toJSON(),
       token,
     });
-    // console.log(user);
   } catch (error) {
     console.log(error);
     return res.status(500).json({

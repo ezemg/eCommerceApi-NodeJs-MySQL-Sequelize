@@ -2,6 +2,14 @@ const { response, request } = require('express');
 const { v4: uuidv4 } = require('uuid');
 
 const db = require('../database/models');
+const {
+  getUserId,
+  getAddressId,
+  getPaymentMethodId,
+  getShippingMethodId,
+  calculateOrderTotal,
+  createOrderLines,
+} = require('../helpers/shopOrderCreateHelpers.js');
 
 const shopOrdersController = {
   shopOrdersGet: async (req, res = response) => {
@@ -195,98 +203,175 @@ const shopOrdersController = {
     }
   },
   shopOrdersPost: async (req, res = response) => {
-    // Armar order_line
-
     try {
-      // Buscar id de user
-      const { id: userId } = await db.User.findOne({
-        where: { uuid: req.user.uuid },
-        raw: true,
-      });
+      const result = await db.sequelize.transaction(async (t) => {
+        const [userId, addressId, paymentMethodId, shippingMethodId] =
+          await Promise.all([
+            // Buscar id de user
+            getUserId(req.user.uuid, t),
+            // Buscar address
+            getAddressId(req.body.addressUuid, t),
+            // Buscar payment_method
+            getPaymentMethodId(req.body.paymentMethodUuid, t),
+            // Buscar shippingMethod
+            getShippingMethodId(req.body.shippingMethodUuid, t),
+          ]);
 
-      // Buscar address
-      const { id: addressId } = await db.Address.findOne({
-        where: { uuid: req.body.addressUuid },
-        raw: true,
-      });
+        // Buscar ids de los product_items y preparar data de productos,
 
-      // Buscar payment_method
-      const { id: paymentMethodId } = await db.PaymentMethod.findOne({
-        where: { uuid: req.body.paymentMethodUuid },
-        raw: true,
-      });
-      // Buscar shippingMethod
-      const { id: shippingMethodId } = await db.ShippingMethod.findOne({
-        where: { uuid: req.body.shippingMethodUuid },
-        raw: true,
-      });
+        const myProducts = [];
+        for (const productItem of req.body.productItems) {
+          const { uuid, qty } = productItem;
+          const productData = await db.ProductItem.findOne(
+            {
+              where: { uuid },
+              raw: true,
+              attributes: ['id', 'price'],
+            },
+            { transaction: t }
+          );
 
-      // Buscar ids de los product_items y preparar data de productos,
-
-      const myProducts = [];
-
-      for (const productItem of req.body.productItems) {
-        const { uuid, qty } = productItem;
-        const productData = await db.ProductItem.findOne({
-          where: { uuid },
-          raw: true,
-          attributes: ['id', 'price'],
-        });
-
-        if (productData) {
-          myProducts.push({
-            productId: productData.id,
-            price: productData.price,
-            qty,
-          });
+          if (productData) {
+            myProducts.push({
+              productId: productData.id,
+              price: productData.price,
+              qty,
+            });
+          }
         }
-      }
 
-      console.log(myProducts);
+        const myData = {
+          user_id: userId,
+          shipping_address_id: addressId,
+          payment_method_id: paymentMethodId,
+          shipping_method_id: shippingMethodId,
+          // Establecer order_status como 'recibido'
+          order_status_id: 1,
+          // Calculo el total de la compra
+          order_total: calculateOrderTotal(myProducts),
+          uuid: uuidv4(),
+          ref_number: uuidv4(),
+        };
 
-      const myData = {
-        userId,
-        addressId,
-        paymentMethodId,
-        shippingMethodId,
-        // Establecer order_status como 'recibido'
-        orderStatusId: 1,
-      };
+        const shopOrder = await db.ShopOrder.create(
+          { ...myData },
+          { transaction: t }
+        );
 
-      // Calculo el total de la compra
-      myData.orderTotal = myProducts.reduce((accumulator, product) => {
-        return accumulator + product.price * product.qty;
-      }, 0);
+        // Armar order_line
 
-      const shopOrder = await db.ShopOrder.create({
-        user_id: myData.userId,
-        uuid: uuidv4(),
-        payment_method_id: myData.paymentMethodId,
-        shipping_address_id: myData.addressId,
-        shipping_method_id: myData.shippingMethodId,
-        order_total: myData.orderTotal,
-        order_status_id: myData.orderStatusId,
-        ref_number: uuidv4(),
+        await createOrderLines(myProducts, shopOrder.id, t);
+
+        return shopOrder;
       });
 
-      for (const product of myProducts) {
-        const { productId, price, qty } = product;
-        await db.OrderLine.create({
-          product_item_id: productId,
-          shop_order_id: shopOrder.id,
-          uuid: uuidv4(),
-          qty,
-          price,
-        });
-      }
-      res.json(shopOrder);
+      res.json({
+        result,
+        msg: 'ok, shopOrder created successfully',
+      });
     } catch (error) {
       console.log(error);
       res.json({ msg: 'shopOrdersPost error from controller' });
     }
   },
-  shopOrdersPut: async (req, res = response) => {},
-  shopOrdersDelete: async (req, res = response) => {},
+
+  shopOrdersPut: async (req, res = response) => {
+    try {
+      const shopOrderUuid = req.params.uuid; // Obtener el UUID del ShopOrder a actualizar
+      const updateData = req.body; // Datos a actualizar
+
+      // Realizar la actualización dentro de una transacción
+      const result = await db.sequelize.transaction(async (t) => {
+        // Buscar el ShopOrder existente por UUID
+        const existingShopOrder = await db.ShopOrder.findOne({
+          where: { uuid: shopOrderUuid },
+          raw: true,
+          transaction: t,
+        });
+
+        if (!existingShopOrder) {
+          // Manejar el caso en que el ShopOrder no existe
+          throw new Error('ShopOrder not found');
+        }
+
+        if (updateData.addressUuid) {
+          const addressId = await getAddressId(updateData.addressUuid, t);
+          updateData.shipping_address_id = addressId;
+        }
+
+        if (updateData.paymentMethodUuid) {
+          const paymentMethodId = await getPaymentMethodId(
+            updateData.paymentMethodUuid,
+            t
+          );
+          updateData.payment_method_id = paymentMethodId;
+        }
+
+        if (updateData.shippingMethodUuid) {
+          const shippingMethodId = await getShippingMethodId(
+            updateData.shippingMethodUuid,
+            t
+          );
+          updateData.shipping_method_id = shippingMethodId;
+        }
+
+        await db.ShopOrder.update(updateData, {
+          where: { uuid: shopOrderUuid },
+          transaction: t,
+        });
+
+        const updatedShopOrder = await db.ShopOrder.findOne({
+          where: { uuid: shopOrderUuid },
+          raw: true,
+          transaction: t,
+        });
+
+        // Si hay cambios en los productos, actualiza los OrderLines y el OrderTotal
+        if (updateData.productItems) {
+          // Elimina los OrderLines existentes para este ShopOrder
+          await db.OrderLine.destroy({
+            where: { shop_order_id: updatedShopOrder.id },
+            transaction: t,
+          });
+
+          // Recrea los OrderLines con los nuevos datos de productos
+          const myProducts = updateData.productItems;
+          await createOrderLines(myProducts, updatedShopOrder.id, t);
+
+          // Recalcula el OrderTotal y actualízalo en el ShopOrder
+          const orderTotal = calculateOrderTotal(myProducts);
+          await db.ShopOrder.update(
+            { order_total: orderTotal },
+            {
+              where: { uuid: shopOrderUuid },
+              transaction: t,
+            }
+          );
+        }
+
+        return updatedShopOrder;
+      });
+
+      res.json({
+        result,
+        msg: 'ShopOrder updated successfully',
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ msg: 'Error updating ShopOrder' });
+    }
+  },
+  shopOrdersDelete: async (req, res = response) => {
+    try {
+      await db.ShopOrder.update(
+        { is_active: 1 },
+        { where: { uuid: req.params.uuid } }
+      );
+    } catch (error) {
+      console.log(error);
+      res.json({ msg: 'shopOrdersDelete error from controller' });
+    }
+  },
 };
 
 const orderStatusController = {

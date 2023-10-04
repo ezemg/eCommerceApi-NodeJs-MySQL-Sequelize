@@ -248,7 +248,6 @@ const variationsController = {
         where: { uuid: req.params.uuid },
       });
 
-      console.log(variationEdit);
 
       res.status(200).json({
         msg: 'ok',
