@@ -26,6 +26,7 @@ const {
   shippingMethodsPost,
   shippingMethodsPut,
   shippingMethodsDelete,
+  shopOrdersUpdateOrderStatus,
 } = require('../controllers/shopOrdersController.js');
 
 const router = Router();
@@ -50,6 +51,8 @@ router.post('/user_review', JWTValidator, userReviewPost);
 router.post('/shipping_method', JWTValidator, shippingMethodsPost);
 
 router.put('/:uuid', JWTValidator, shopOrdersPut);
+router.put('/:uuid/order_status', JWTValidator, shopOrdersUpdateOrderStatus);
+
 router.put('/order_status/:uuid', JWTValidator, orderStatusPut);
 router.put('/order_line/:uuid', JWTValidator, orderLinePut);
 router.put('/user_review/:uuid', JWTValidator, userReviewPut);

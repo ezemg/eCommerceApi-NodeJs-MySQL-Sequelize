@@ -9,6 +9,11 @@ const {
   getShippingMethodId,
   calculateOrderTotal,
   createOrderLines,
+  getProductItemsData,
+  createShopOrder,
+  getUserData,
+  validateUserData,
+  updateShopOrder,
 } = require('../helpers/shopOrderCreateHelpers.js');
 
 const shopOrdersController = {
@@ -205,60 +210,11 @@ const shopOrdersController = {
   shopOrdersPost: async (req, res = response) => {
     try {
       const result = await db.sequelize.transaction(async (t) => {
-        const [userId, addressId, paymentMethodId, shippingMethodId] =
-          await Promise.all([
-            // Buscar id de user
-            getUserId(req.user.uuid, t),
-            // Buscar address
-            getAddressId(req.body.addressUuid, t),
-            // Buscar payment_method
-            getPaymentMethodId(req.body.paymentMethodUuid, t),
-            // Buscar shippingMethod
-            getShippingMethodId(req.body.shippingMethodUuid, t),
-          ]);
+        const userData = await getUserData(req, t);
 
-        // Buscar ids de los product_items y preparar data de productos,
+        const myProducts = await getProductItemsData(req.body.productItems, t);
 
-        const myProducts = [];
-        for (const productItem of req.body.productItems) {
-          const { uuid, qty } = productItem;
-          const productData = await db.ProductItem.findOne(
-            {
-              where: { uuid },
-              raw: true,
-              attributes: ['id', 'price'],
-            },
-            { transaction: t }
-          );
-
-          if (productData) {
-            myProducts.push({
-              productId: productData.id,
-              price: productData.price,
-              qty,
-            });
-          }
-        }
-
-        const myData = {
-          user_id: userId,
-          shipping_address_id: addressId,
-          payment_method_id: paymentMethodId,
-          shipping_method_id: shippingMethodId,
-          // Establecer order_status como 'recibido'
-          order_status_id: 1,
-          // Calculo el total de la compra
-          order_total: calculateOrderTotal(myProducts),
-          uuid: uuidv4(),
-          ref_number: uuidv4(),
-        };
-
-        const shopOrder = await db.ShopOrder.create(
-          { ...myData },
-          { transaction: t }
-        );
-
-        // Armar order_line
+        const shopOrder = await createShopOrder(userData, myProducts, t);
 
         await createOrderLines(myProducts, shopOrder.id, t);
 
@@ -290,76 +246,53 @@ const shopOrdersController = {
         });
 
         if (!existingShopOrder) {
-          // Manejar el caso en que el ShopOrder no existe
           throw new Error('ShopOrder not found');
         }
 
-        if (updateData.addressUuid) {
-          const addressId = await getAddressId(updateData.addressUuid, t);
-          updateData.shipping_address_id = addressId;
+        const userData = await getUserData(req, t);
+
+        for (const key in userData) {
+          if (userData[key] === undefined) {
+            delete userData[key];
+          }
         }
 
-        if (updateData.paymentMethodUuid) {
-          const paymentMethodId = await getPaymentMethodId(
-            updateData.paymentMethodUuid,
-            t
-          );
-          updateData.payment_method_id = paymentMethodId;
-        }
+        const myProducts = await getProductItemsData(req.body.productItems, t);
 
-        if (updateData.shippingMethodUuid) {
-          const shippingMethodId = await getShippingMethodId(
-            updateData.shippingMethodUuid,
-            t
-          );
-          updateData.shipping_method_id = shippingMethodId;
-        }
+        const shopOrder = await updateShopOrder(
+          userData,
+          myProducts,
+          existingShopOrder.uuid,
+          t
+        );
 
-        await db.ShopOrder.update(updateData, {
-          where: { uuid: shopOrderUuid },
-          transaction: t,
-        });
-
-        const updatedShopOrder = await db.ShopOrder.findOne({
-          where: { uuid: shopOrderUuid },
-          raw: true,
-          transaction: t,
-        });
-
-        // Si hay cambios en los productos, actualiza los OrderLines y el OrderTotal
-        if (updateData.productItems) {
+        // // Si hay cambios en los productos, actualiza los OrderLines y el OrderTotal
+        if (myProducts) {
           // Elimina los OrderLines existentes para este ShopOrder
           await db.OrderLine.destroy({
-            where: { shop_order_id: updatedShopOrder.id },
+            where: { shop_order_id: existingShopOrder.id },
             transaction: t,
           });
 
           // Recrea los OrderLines con los nuevos datos de productos
-          const myProducts = updateData.productItems;
-          await createOrderLines(myProducts, updatedShopOrder.id, t);
-
-          // Recalcula el OrderTotal y actualízalo en el ShopOrder
-          const orderTotal = calculateOrderTotal(myProducts);
-          await db.ShopOrder.update(
-            { order_total: orderTotal },
-            {
-              where: { uuid: shopOrderUuid },
-              transaction: t,
-            }
-          );
+          await createOrderLines(myProducts, existingShopOrder.id, t);
         }
 
-        return updatedShopOrder;
+        return shopOrder;
       });
 
       res.json({
-        result,
+        // result,
         msg: 'ShopOrder updated successfully',
       });
     } catch (error) {
       console.log(error);
-      res.status(500).json({ msg: 'Error updating ShopOrder' });
+      res.status(404).json({ msg: error.message });
     }
+  },
+
+  shopOrdersUpdateOrderStatus: async (req, res) => {
+    res.json({ msg: 'shopOrdersUpdateOrderStatus controller' });
   },
   shopOrdersDelete: async (req, res = response) => {
     try {
@@ -451,34 +384,6 @@ const orderStatusController = {
       res.json({ msg: 'orderStatusDelete error from controller' });
     }
   },
-};
-
-const orderLineController = {
-  orderLineGet: async (req, res = response) => {
-    try {
-      const orderLines = await db.OrderLine.findAll({
-        include: [
-          {
-            model: db.ProductItem,
-            as: 'product_item',
-            include: [
-              { model: db.Product, as: 'product' },
-              { model: db.VariationOption, as: 'variation_option' },
-            ],
-          },
-        ],
-      });
-
-      res.json(orderLines);
-    } catch (error) {
-      console.log(error);
-      res.json({ msg: 'orderLinesGet error from controller' });
-    }
-  },
-  orderLineGetByUuid: async (req, res = response) => {},
-  orderLinePost: async (req, res = response) => {},
-  orderLinePut: async (req, res = response) => {},
-  orderLineDelete: async (req, res = response) => {},
 };
 
 const userReviewController = {
